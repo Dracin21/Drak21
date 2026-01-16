@@ -3,81 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DramaHub - Streaming</title>
+    <title>Melolo Clone - Nonton Drama Asia</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { background-color: #0b0f19; color: white; }
-        .card:hover { transform: scale(1.05); transition: 0.3s; }
+        :root { --bg-dark: #06090f; --card-bg: #10161d; --primary: #3b82f6; }
+        body { background-color: var(--bg-dark); color: #e2e8f0; font-family: 'Inter', sans-serif; }
+        .sidebar { background-color: var(--card-bg); }
+        .drama-card:hover { border-color: var(--primary); transform: translateY(-3px); }
     </style>
 </head>
-<body>
-    <nav class="p-4 bg-gray-900 border-b border-gray-800 sticky top-0 z-50">
+<body class="flex flex-col min-h-screen">
+
+    <nav class="bg-[#0b0f15] p-4 border-b border-gray-800 sticky top-0 z-[100]">
         <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-blue-500">DRAMA<span class="text-white">HUB</span></h1>
-            <input id="search" type="text" placeholder="Cari..." class="bg-gray-800 rounded-full px-4 py-1 text-sm border border-gray-700">
+            <div class="flex items-center gap-8">
+                <h1 class="text-2xl font-black text-blue-500 tracking-tighter">MELOLO<span class="text-white font-light text-sm italic">Lite</span></h1>
+                <div class="hidden md:flex gap-6 text-sm font-medium text-gray-400">
+                    <a href="#" onclick="loadContent('zh')" class="hover:text-white">Drama China</a>
+                    <a href="#" onclick="loadContent('ko')" class="hover:text-white">Drama Korea</a>
+                    <a href="#" class="hover:text-white">Movie</a>
+                </div>
+            </div>
+            <div class="flex items-center bg-gray-800 rounded-md px-3 py-1.5 border border-gray-700">
+                <input id="search" type="text" placeholder="Cari drama..." class="bg-transparent text-sm outline-none w-40 md:w-64">
+                <i class="fas fa-search text-gray-500"></i>
+            </div>
         </div>
     </nav>
 
-    <div class="container mx-auto p-6">
-        <h2 class="text-xl font-bold mb-6 border-l-4 border-blue-500 pl-3">Drama Populer</h2>
-        <div id="grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            <p id="msg" class="col-span-full text-center text-gray-500 text-sm">Menghubungkan ke server...</p>
-        </div>
+    <div class="flex flex-1 container mx-auto">
+        <aside class="hidden lg:block w-64 p-6 border-r border-gray-800 sidebar">
+            <h3 class="text-gray-500 text-xs font-bold uppercase mb-4 tracking-widest">Genre</h3>
+            <ul class="space-y-3 text-sm">
+                <li><a href="#" class="flex justify-between hover:text-blue-500"><span>Wuxia</span> <small class="text-gray-600">42</small></a></li>
+                <li><a href="#" class="flex justify-between hover:text-blue-500"><span>Xianxia</span> <small class="text-gray-600">18</small></a></li>
+                <li><a href="#" class="flex justify-between hover:text-blue-500"><span>Romance</span> <small class="text-gray-600">120</small></a></li>
+                <li><a href="#" class="flex justify-between hover:text-blue-500"><span>Thriller</span> <small class="text-gray-600">25</small></a></li>
+            </ul>
+            <div class="mt-8 p-4 bg-blue-900/20 border border-blue-800 rounded-xl text-xs text-blue-300">
+                Gunakan VPN jika video tidak muncul di provider tertentu.
+            </div>
+        </aside>
+
+        <main class="flex-1 p-6">
+            <div class="flex justify-between items-center mb-8">
+                <h2 id="currentCat" class="text-xl font-bold">Terbaru Hari Ini</h2>
+                <div class="flex gap-2">
+                    <button class="bg-gray-800 p-2 rounded text-xs">Paling Banyak Dilihat</button>
+                    <button class="bg-gray-800 p-2 rounded text-xs">Rating</button>
+                </div>
+            </div>
+
+            <div id="dramaGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <div class="col-span-full py-20 text-center animate-pulse text-gray-600 font-bold uppercase tracking-widest">Memuat Konten...</div>
+            </div>
+        </aside>
     </div>
 
-    <div id="player" class="fixed inset-0 bg-black/95 hidden z-[100] flex flex-col items-center justify-center p-4">
-        <button onclick="closePlayer()" class="self-end text-3xl mb-4">&times; Tutup</button>
-        <div class="w-full max-w-4xl aspect-video bg-gray-800 rounded-lg overflow-hidden">
-            <iframe id="videoFrame" src="" class="w-full h-full" allowfullscreen></iframe>
+    <div id="playerModal" class="fixed inset-0 bg-black/98 z-[200] hidden flex flex-col p-4 md:p-10">
+        <div class="flex justify-between items-center mb-4">
+            <h2 id="videoTitle" class="font-bold text-lg">Memutar Drama</h2>
+            <button onclick="closeVideo()" class="bg-red-600 px-4 py-1 rounded text-sm font-bold">TUTUP</button>
+        </div>
+        <div class="w-full max-w-5xl mx-auto aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-gray-800">
+            <iframe id="videoIframe" src="" class="w-full h-full" allowfullscreen></iframe>
+        </div>
+        <div class="mt-6 flex gap-4 overflow-x-auto py-4">
+            <button class="bg-blue-600 px-4 py-2 rounded min-w-[80px]">EPS 01</button>
+            <button class="bg-gray-800 px-4 py-2 rounded min-w-[80px]">EPS 02</button>
+            <button class="bg-gray-800 px-4 py-2 rounded min-w-[80px]">EPS 03</button>
+            <button class="bg-gray-800 px-4 py-2 rounded min-w-[80px]">EPS 04</button>
         </div>
     </div>
 
     <script>
-        // Data cadangan jika API gagal/lambat
-        const fallbackData = [
-            { id: 110356, name: "Hidden Love", poster_path: "/66Y9Hbt9oqY99I00S9Yn9Yn.jpg" },
-            { id: 114410, name: "Who Rules The World", poster_path: "/ov706S6I6pSS6S6I6pS.jpg" }
-        ];
+        const API_KEY = '865409395f87b353f86e39f37920155b';
+        const grid = document.getElementById('dramaGrid');
 
-        async function init() {
-            const grid = document.getElementById('grid');
-            const msg = document.getElementById('msg');
+        async function loadContent(lang = 'zh') {
+            grid.innerHTML = '<div class="col-span-full py-20 text-center text-gray-600">Memuat...</div>';
+            const res = await fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_original_language=${lang}&sort_by=popularity.desc`);
+            const data = await res.json();
             
-            try {
-                // Menggunakan API publik gratis untuk testing
-                const res = await fetch('https://api.themoviedb.org/3/trending/tv/day?api_key=865409395f87b353f86e39f37920155b');
-                const data = await res.json();
-                render(data.results);
-                msg.style.display = 'none';
-            } catch (e) {
-                console.log("Gagal memuat API, menggunakan data lokal.");
-                render(fallbackData);
-                msg.innerText = "Mode Offline Aktif";
-            }
-        }
-
-        function render(items) {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = items.map(item => `
-                <div class="card bg-gray-900 rounded-lg overflow-hidden cursor-pointer shadow-xl" onclick="play(${item.id})">
-                    <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" class="w-full h-64 object-cover">
-                    <div class="p-3 text-sm font-bold truncate">${item.name || item.title}</div>
+            grid.innerHTML = data.results.map(item => `
+                <div class="drama-card bg-[#10161d] rounded-lg border border-gray-800 overflow-hidden cursor-pointer transition-all duration-300" onclick="playVideo(${item.id}, '${item.name}')">
+                    <div class="relative">
+                        <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" class="w-full h-60 object-cover">
+                        <div class="absolute bottom-2 right-2 bg-blue-600 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">Sub Indo</div>
+                        <div class="absolute top-2 left-2 bg-black/60 text-yellow-400 text-[10px] px-2 py-1 rounded-md backdrop-blur-sm">★ ${item.vote_average.toFixed(1)}</div>
+                    </div>
+                    <div class="p-3">
+                        <h4 class="text-sm font-semibold truncate">${item.name}</h4>
+                        <p class="text-xs text-gray-500 mt-1">${item.first_air_date ? item.first_air_date.split('-')[0] : 'Unknown'}</p>
+                    </div>
                 </div>
             `).join('');
+            document.getElementById('currentCat').innerText = lang === 'zh' ? 'Drama China Terbaru' : 'Drama Korea Terbaru';
         }
 
-        function play(id) {
-            document.getElementById('player').classList.remove('hidden');
-            // Link player universal
-            document.getElementById('videoFrame').src = `https://vidsrc.to/embed/tv/${id}`;
+        function playVideo(id, name) {
+            document.getElementById('videoTitle').innerText = "Streaming: " + name;
+            document.getElementById('videoIframe').src = `https://vidsrc.to/embed/tv/${id}`;
+            document.getElementById('playerModal').classList.remove('hidden');
         }
 
-        function closePlayer() {
-            document.getElementById('player').classList.add('hidden');
-            document.getElementById('videoFrame').src = "";
+        function closeVideo() {
+            document.getElementById('playerModal').classList.add('hidden');
+            document.getElementById('videoIframe').src = "";
         }
 
-        init();
+        // Search listener
+        document.getElementById('search').addEventListener('keypress', async (e) => {
+            if(e.key === 'Enter') {
+                const query = e.target.value;
+                const res = await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${API_KEY}&query=${query}`);
+                const data = await res.json();
+                loadContentManual(data.results);
+            }
+        });
+
+        loadContent('zh');
     </script>
 </body>
 </html>
