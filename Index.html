@@ -3,111 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DraK21 - Streaming C-Drama</title>
+    <title>DraK21 - Nonton Drama China</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { background-color: #0b0f19; color: white; font-family: 'Inter', sans-serif; }
-        .movie-card:hover img { transform: scale(1.05); transition: 0.3s; }
-        .loader { border-top-color: #3b82f6; animation: spinner 1.5s linear infinite; }
-        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { background-color: #020617; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); }
+        .movie-card:hover { transform: scale(1.05); z-index: 10; }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; }
     </style>
 </head>
 <body>
 
-    <nav class="p-4 bg-gray-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-800">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-blue-500 tracking-tighter">DRAMA<span class="text-white">HUB</span></h1>
-            <div class="hidden md:flex space-x-6 text-sm font-medium">
-                <a href="#" class="text-blue-400">Home</a>
-                <a href="#" class="hover:text-blue-400">C-Drama</a>
-                <a href="#" class="hover:text-blue-400">Movies</a>
-                <a href="#" class="hover:text-blue-400">Trending</a>
+    <nav class="glass sticky top-0 z-50 p-4 border-b border-slate-800">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="text-3xl font-black text-blue-500 tracking-tighter cursor-pointer" onclick="location.reload()">DRAMA<span class="text-white">HUB</span></h1>
+            
+            <div class="flex items-center bg-slate-800 rounded-full px-4 py-2 w-full md:w-1/2">
+                <i class="fas fa-search text-slate-400 mr-2"></i>
+                <input id="searchField" type="text" placeholder="Cari drama, film, atau aktor..." class="bg-transparent border-none outline-none w-full text-sm">
             </div>
-            <input id="searchInput" type="text" placeholder="Cari drama..." class="bg-gray-800 text-sm rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-40 md:w-64">
+
+            <div class="flex gap-4 text-sm font-semibold">
+                <button onclick="fetchData('zh')" class="hover:text-blue-400 transition">C-Drama</button>
+                <button onclick="fetchData('ko')" class="hover:text-blue-400 transition">K-Drama</button>
+                <button onclick="fetchData('movie')" class="hover:text-blue-400 transition">Movies</button>
+            </div>
         </div>
     </nav>
 
-    <div class="container mx-auto p-4 mt-4">
-        <div class="relative rounded-3xl overflow-hidden h-[300px] bg-gradient-to-r from-blue-900 to-black flex items-center p-8">
-            <div class="relative z-10 max-w-lg">
-                <span class="bg-blue-600 text-[10px] font-bold px-2 py-1 rounded mb-4 inline-block">TRENDING SEKARANG</span>
-                <h2 class="text-4xl font-bold mb-2">Eksplorasi Drama Asia</h2>
-                <p class="text-gray-300 text-sm mb-6">Temukan ribuan judul drama China, Korea, dan Jepang terbaru dengan kualitas terbaik.</p>
-                <button class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-full font-semibold transition">Tonton Sekarang</button>
+    <div class="container mx-auto p-4">
+        <div id="hero" class="relative rounded-3xl h-80 bg-slate-900 overflow-hidden mb-8 shadow-2xl flex items-center p-8 bg-cover bg-center" style="background-image: linear-gradient(to right, #020617, transparent), url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=1000');">
+            <div class="max-w-xl">
+                <h2 id="heroTitle" class="text-5xl font-bold mb-4">Mulai Streaming</h2>
+                <p id="heroDesc" class="text-slate-300 mb-6 line-clamp-2">Nonton ribuan koleksi drama Asia subtitle Indonesia secara gratis dengan kualitas HD.</p>
+                <div class="flex gap-4">
+                    <button class="bg-blue-600 px-8 py-3 rounded-full font-bold hover:bg-blue-700">TRENDING</button>
+                    <button class="bg-slate-700/50 px-8 py-3 rounded-full font-bold backdrop-blur-md">LISTS</button>
+                </div>
             </div>
-            <div class="absolute right-0 top-0 h-full w-1/2 bg-[url('https://source.unsplash.com/random/800x600?cinema')] bg-cover opacity-30 hidden md:block"></div>
+        </div>
+
+        <h3 id="sectionTitle" class="text-xl font-bold mb-6 flex items-center uppercase tracking-widest text-blue-400">
+            <span class="w-1 h-6 bg-blue-500 mr-3"></span>Drama China Terbaru
+        </h3>
+        
+        <div id="mainGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            </div>
+    </div>
+
+    <div id="videoModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/95">
+        <div class="w-full max-w-4xl">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modalTitle" class="text-xl font-bold">Player</h2>
+                <button onclick="closeModal()" class="text-3xl">&times;</button>
+            </div>
+            <div class="video-container">
+                <iframe id="videoFrame" src="" allowfullscreen></iframe>
+            </div>
+            <div class="mt-4 p-4 bg-slate-900 rounded-lg">
+                <p class="text-yellow-400 text-sm mb-2 font-bold uppercase tracking-widest">Server Utama</p>
+                <p class="text-slate-400 text-xs">Jika video tidak muncul, pastikan judul tersedia di database internasional (TMDB).</p>
+            </div>
         </div>
     </div>
 
-    <main class="container mx-auto p-4">
-        <h3 class="text-xl font-bold mb-6 flex items-center">
-            <span class="w-1 h-6 bg-blue-500 mr-3"></span> Drama Populer
-        </h3>
-        
-        <div id="loader" class="flex justify-center my-20">
-            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
-        </div>
-
-        <div id="dramaGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            </div>
-    </main>
-
     <script>
-        // API Key dari TMDB (Gunakan API Key publik untuk contoh ini)
-        const API_KEY = '865409395f87b353f86e39f37920155b'; // API Key contoh
-        const BASE_URL = 'https://api.themoviedb.org/3';
+        const API_KEY = '865409395f87b353f86e39f37920155b';
         const IMG_URL = 'https://image.tmdb.org/t/p/w500';
+        
+        // Fungsi Ambil Data
+        async function fetchData(type = 'zh') {
+            let url = '';
+            const grid = document.getElementById('mainGrid');
+            grid.innerHTML = '<div class="col-span-full text-center py-20 text-slate-500">Memuat konten...</div>';
 
-        const dramaGrid = document.getElementById('dramaGrid');
-        const loader = document.getElementById('loader');
-        const searchInput = document.getElementById('searchInput');
-
-        // Fungsi Ambil Data dari API
-        async function getDramas(url) {
-            try {
-                const res = await fetch(url);
-                const data = await res.json();
-                displayDramas(data.results);
-            } catch (error) {
-                console.error("Gagal mengambil data", error);
-            } finally {
-                loader.style.display = 'none';
+            if(type === 'movie') {
+                url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc`;
+                document.getElementById('sectionTitle').innerText = 'Movies Terpopuler';
+            } else {
+                url = `https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_original_language=${type}&sort_by=popularity.desc`;
+                document.getElementById('sectionTitle').innerText = type === 'zh' ? 'Drama China Terbaru' : 'Drama Korea Terbaru';
             }
+
+            const res = await fetch(url);
+            const data = await res.json();
+            renderGrid(data.results, type);
         }
 
-        // Fungsi Menampilkan Card ke HTML
-        function displayDramas(dramas) {
-            dramaGrid.innerHTML = '';
-            dramas.forEach(drama => {
-                const { name, title, poster_path, vote_average, first_air_date } = drama;
+        function renderGrid(data, type) {
+            const grid = document.getElementById('mainGrid');
+            grid.innerHTML = '';
+            
+            data.forEach(item => {
+                const title = item.name || item.title;
+                const date = item.first_air_date || item.release_date || 'Unknown';
                 const card = document.createElement('div');
-                card.className = 'movie-card bg-gray-900 rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-blue-900/20 transition-all';
+                card.className = 'movie-card transition-all duration-300 bg-slate-900 rounded-2xl overflow-hidden cursor-pointer shadow-lg group';
+                card.onclick = () => openPlayer(item.id, title, type);
+                
                 card.innerHTML = `
                     <div class="relative overflow-hidden">
-                        <img src="${poster_path ? IMG_URL + poster_path : 'https://via.placeholder.com/500x750'}" alt="${name || title}" class="w-full h-72 object-cover">
-                        <div class="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-yellow-400 text-xs font-bold">
-                            ★ ${vote_average.toFixed(1)}
+                        <img src="${IMG_URL + item.poster_path}" class="w-full h-72 object-cover transition duration-500 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end p-4">
+                            <button class="w-full bg-blue-600 py-2 rounded-lg font-bold text-xs shadow-lg">NONTON SEKARANG</button>
                         </div>
+                        <div class="absolute top-2 left-2 bg-blue-600 text-[10px] font-bold px-2 py-1 rounded shadow-md">HD</div>
+                        <div class="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-yellow-400 text-[10px] font-bold px-2 py-1 rounded shadow-md">★ ${item.vote_average.toFixed(1)}</div>
                     </div>
-                    <div class="p-3">
-                        <h4 class="font-bold text-sm truncate">${name || title}</h4>
-                        <p class="text-gray-500 text-[10px] mt-1 uppercase tracking-widest">${first_air_date ? first_air_date.split('-')[0] : 'N/A'}</p>
+                    <div class="p-4">
+                        <h4 class="font-bold text-sm truncate mb-1">${title}</h4>
+                        <p class="text-slate-500 text-[10px] font-medium">${date.split('-')[0]} • ${type.toUpperCase()}</p>
                     </div>
                 `;
-                dramaGrid.appendChild(card);
+                grid.appendChild(card);
             });
         }
 
-        // Jalankan saat pertama dibuka (Ambil TV Shows Populer - Banyak C-Drama di sini)
-        getDramas(`${BASE_URL}/discover/tv?api_key=${API_KEY}&with_original_language=zh&sort_by=popularity.desc`);
+        // Fungsi Player
+        function openPlayer(id, title, type) {
+            const modal = document.getElementById('videoModal');
+            const frame = document.getElementById('videoFrame');
+            const mTitle = document.getElementById('modalTitle');
+            
+            // Menggunakan API pihak ketiga vidsrc.to untuk simulasi pemutaran film secara gratis
+            const embedType = (type === 'movie') ? 'movie' : 'tv';
+            frame.src = `https://vidsrc.to/embed/${embedType}/${id}`;
+            
+            mTitle.innerText = `Sedang Menonton: ${title}`;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('videoModal');
+            const frame = document.getElementById('videoFrame');
+            modal.classList.add('hidden');
+            frame.src = '';
+            document.body.style.overflow = 'auto';
+        }
 
         // Fitur Search
-        searchInput.addEventListener('keyup', (e) => {
-            const query = e.target.value;
-            if(query) {
-                getDramas(`${BASE_URL}/search/multi?api_key=${API_KEY}&query=${query}`);
+        document.getElementById('searchField').addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                const query = e.target.value;
+                const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${query}`);
+                const data = await res.json();
+                renderGrid(data.results, 'search');
+                document.getElementById('sectionTitle').innerText = `Hasil Pencarian: ${query}`;
             }
         });
+
+        // Load awal
+        fetchData('zh');
     </script>
 </body>
 </html>
